@@ -1,0 +1,286 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -1248,
+        -192
+      ],
+      "id": "9c72d3fe-4e40-488b-9f45-b1bc719e517c",
+      "name": "Telegram Trigger",
+      "webhookId": "f78604b4-0763-4afa-82f0-7bcb82b4492e",
+      "credentials": {
+        "telegramApi": {
+          "id": "25DtjJ2kaU4uUtGw",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c8222f6b-de4f-4638-bc80-bddadac44651",
+              "name": "queue",
+              "value": "={{\n  $json.message.text\n    .trim()\n    .toLowerCase()\n    .normalize(\"NFD\")\n    .replace(/[\\u0300-\\u036f]/g, \"\")\n    .replace(/\\s*,\\s*/g, \",\")\n}}",
+              "type": "string"
+            },
+            {
+              "id": "d730a24f-957a-4c08-8481-2baa84d53e7d",
+              "name": "chatId",
+              "value": "={{ $json.message.chat.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -1024,
+        -192
+      ],
+      "id": "1a3918c5-284c-4916-8e76-97d773c51937",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "url": "https://api.openweathermap.org/data/2.5/weather",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{$json.queue}}"
+            },
+            {
+              "name": "units",
+              "value": "metric"
+            },
+            {
+              "name": "lang",
+              "value": "pt_br"
+            },
+            {
+              "name": "appid",
+              "value": "=<SUA_APPID>"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -800,
+        -192
+      ],
+      "id": "3e737f64-80b5-415c-b1de-74e7deabcca3",
+      "name": "HTTP Request",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d6e35b6f-61f6-4c18-807c-eafd608d0a3b",
+              "leftValue": "={{ $json.cod }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -576,
+        -192
+      ],
+      "id": "a1db1816-3c95-416e-998c-d924543ba1d4",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "text": "={{ $json.output[0].content[0].text }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        64,
+        -256
+      ],
+      "id": "1972cc31-0cb9-4ed4-9770-fe474cbf74f3",
+      "name": "Send a text message",
+      "webhookId": "04bda615-eb1a-48e1-ab29-46038920f0c1",
+      "credentials": {
+        "telegramApi": {
+          "id": "25DtjJ2kaU4uUtGw",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.6-sol",
+          "mode": "list",
+          "cachedResultName": "GPT-5.6-SOL"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Você é um assistente especialista em clima e recomendações do dia a dia.\n\nSua tarefa é interpretar os dados meteorológicos abaixo e responder em português do Brasil, de forma clara, curta, natural e útil.\n\nDados atuais:\n\nCidade: {{ $json.name }}\nTemperatura: {{ $json.main.temp }} °C\nSensação térmica: {{ $json.main.feels_like }} °C\nTemperatura mínima: {{ $json.main.temp_min }} °C\nTemperatura máxima: {{ $json.main.temp_max }} °C\nUmidade: {{ $json.main.humidity }}%\nPressão atmosférica: {{ $json.main.pressure }} hPa\nCondição: {{ $json.weather[0].description }}\nVisibilidade: {{ $json.visibility }} metros\nVelocidade do vento: {{ $json.wind.speed }} m/s\nDireção do vento: {{ $json.wind.deg }} graus\nNebulosidade: {{ $json.clouds.all }}%\n\nMonte a resposta seguindo estas regras:\n\n1. Comece com um resumo simples do clima atual.\n2. Informe temperatura e sensação térmica.\n3. Informe umidade e condição do céu.\n4. Comente sobre o vento se ele for relevante.\n5. Informe se o clima parece quente, frio, abafado, agradável ou chuvoso.\n6. Sugira uma roupa adequada para sair.\n7. Informe se parece interessante levar guarda-chuva, protetor solar ou garrafa de água.\n8. Caso esteja muito quente, muito frio, muito úmido ou com vento forte, destaque isso.\n9. Não invente previsão futura. Use somente os dados fornecidos.\n10. Não diga que vai chover se os dados não indicarem chuva.\n11. Não use linguagem técnica demais.\n12. Use emojis moderadamente.\n13. Responda com no máximo 8 linhas.\n14. Não mencione JSON, API, OpenWeather ou dados de sistema.\n\nExemplo de estilo de resposta:\n\n🌤️ Agora em Salvador está fazendo 26 °C, com sensação térmica de 27 °C.\nO céu está parcialmente nublado e a umidade está em 78%.\nO clima está quente e um pouco abafado.\n👕 Prefira roupas leves.\n💧 Vale levar uma garrafa de água.\n☀️ Se for ficar ao ar livre, use protetor solar."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        -368,
+        -320
+      ],
+      "id": "655a8adc-9378-4866-9a9c-79f74965cf5c",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "t79OkSz7oF4Bcwuy",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "text": "=Desculpa! a cidade não foi encontrada!",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -336,
+        -48
+      ],
+      "id": "7c674fed-4311-4d3a-974f-3d072d1da2f5",
+      "name": "Send a text message1",
+      "webhookId": "04bda615-eb1a-48e1-ab29-46038920f0c1",
+      "credentials": {
+        "telegramApi": {
+          "id": "25DtjJ2kaU4uUtGw",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        []
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "f81409e3-534f-41ec-8a73-a10dc19ba860",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "92f8460af4b4d364e39a3f5ede2fc7c967be5ad225c15c31af048e6db6a4d0b8"
+  },
+  "nodeGroups": [],
+  "id": "31XQuvBlqopjwyvY",
+  "tags": []
+}
