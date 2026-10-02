@@ -95,10 +95,11 @@ docker compose down
 Trecho fornecido como exemplo da resposta enviada ao Telegram, com as sequências `\n` convertidas em quebras de linha para facilitar a leitura:
 
 ```text
-umidade está alta, em 82%, e o céu está totalmente encoberto.
-O vento é fraco, então o clima parece ameno, agradável e um pouco úmido.
-🧥 Uma roupa leve com casaco fino é uma boa opção.
-💧 Vale levar uma garrafa de água.
+☁️ Agora em São Paulo está nublado, com temperatura de 20,4 °C e sensação de 20,6 °C.
+A umidade está alta, em 82%, e o céu está totalmente encoberto. 
+O vento é fraco, então o clima parece ameno, agradável e um pouco úmido. 
+🧥 Uma roupa leve com casaco fino é uma boa opção. 
+💧 Vale levar uma garrafa de água. 
 🌂 Não há indicação de chuva, mas um guarda-chuva compacto pode ser útil por precaução.
 
 This message was sent automatically with n8n
